@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crash</title>
+
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #0f1c30, #060b16);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+
+/* TOP */
+.top {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  opacity: 0.85;
+}
+
+.balance {
+  background: #101d33;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+/* CENTER */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown {
+  font-size: 14px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.multiplier {
+  font-size: 58px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+/* ROCKET */
+.rocket {
+  width: 90px;
+  height: 90px;
+  opacity: 0.9;
+  transition: transform 0.05s linear;
+}
+
+.rocket svg {
+  width: 100%;
+  height: 100%;
+  fill: #4da3ff;
+}
+
+/* EXPLOSION */
+.explosion {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #8ecbff, #1e6bff, transparent);
+  animation: boom 0.5s ease-out forwards;
+}
+
+@keyframes boom {
+  from { transform: scale(0.3); opacity: 1; }
+  to { transform: scale(2); opacity: 0; }
+}
+
+/* LAST */
+.last {
+  margin-top: 12px;
+  color: #ff5c5c;
+  font-weight: 600;
+}
+
+/* BOTTOM */
+.bottom {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  padding: 0 16px;
+}
+
+button {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  border: none;
+  color: #fff;
+}
+
+.blue { background: #2f7cff; }
+.gray { background: #3a425a; }
+.red  { background: #ff4d4d; }
+</style>
+</head>
+
+<body>
+
+<div class="top">
+  <div></div>
+  <div class="balance">TON <span id="balance">100.00</span></div>
+</div>
+
+<div class="center">
+  <div class="countdown" id="countdown"></div>
+  <div class="multiplier" id="multiplier">1.00x</div>
+
+  <div class="rocket" id="rocket">
+    <!-- КАПЛЯ -->
+    <svg viewBox="0 0 24 24">
+      <path d="M12 2C9 6 8 9 8 12c0 4 4 8 4 8s4-4 4-8c0-3-1-6-4-10z"/>
+    </svg>
+  </div>
+
+  <div class="last" id="last"></div>
+</div>
+
+<div class="bottom">
+  <button id="btn" class="blue">СТАВКА 1 TON</button>
+</div>
+
+<script>
+let balance = 100;
+let bet = false;
+let state = "WAIT";
+let mult = 1;
+let crashAt = 0;
+let timer, fly;
+let cd = 5;
+
+const balanceEl = document.getElementById("balance");
+const multEl = document.getElementById("multiplier");
+const rocket = document.getElementById("rocket");
+const btn = document.getElementById("btn");
+const last = document.getElementById("last");
+const cdEl = document.getElementById("countdown");
+
+function genCrash() {
+  const r = Math.random();
+  if (r < 0.55) return 1.3 + Math.random();
+  if (r < 0.85) return 2 + Math.random() * 1.5;
+  if (r < 0.97) return 4 + Math.random() * 1.5;
+  return 6 + Math.random() * 2;
+}
+
+function startWait() {
+  state = "WAIT";
+  bet = false;
+  mult = 1;
+  cd = 5;
+  multEl.textContent = "1.00x";
+  rocket.style.transform = "rotate(-20deg)";
+  last.textContent = "";
+  btn.textContent = "СТАВКА 1 TON";
+  btn.className = "blue";
+
+  timer = setInterval(() => {
+    cdEl.textContent = "Следующий раунд через " + cd;
+    cd--;
+    if (cd < 0) {
+      clearInterval(timer);
+      startFly();
+    }
+  }, 1000);
+}
+
+function startFly() {
+  state = "FLY";
+  cdEl.textContent = "";
+  crashAt = genCrash();
+
+  fly = setInterval(() => {
+    mult += 0.008 + mult * 0.0015;
+    multEl.textContent = mult.toFixed(2) + "x";
+    rocket.style.transform = `translate(${mult * 6}px, ${-mult * 6}px) rotate(${mult * 6}deg)`;
+
+    if (mult >= crashAt) crash();
+  }, 100);
+}
+
+function crash() {
+  clearInterval(fly);
+  state = "CRASH";
+  multEl.textContent = "";
+  rocket.innerHTML = "<div class='explosion'></div>";
+  last.textContent = "Last x" + crashAt.toFixed(2);
+  btn.className = "gray";
+  btn.textContent = "ОЖИДАНИЕ";
+
+  setTimeout(() => {
+    rocket.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2C9 6 8 9 8 12c0 4 4 8 4 8s4-4 4-8c0-3-1-6-4-10z"/>
+      </svg>`;
+    startWait();
+  }, 1800);
+}
+
+btn.onclick = () => {
+  if (state === "WAIT" && !bet) {
+    balance -= 1;
+    bet = true;
+    balanceEl.textContent = balance.toFixed(2);
+    btn.textContent = "ОТМЕНА";
+    btn.className = "red";
+  } else if (state === "WAIT" && bet) {
+    balance += 1;
+    bet = false;
+    balanceEl.textContent = balance.toFixed(2);
+    btn.textContent = "СТАВКА 1 TON";
+    btn.className = "blue";
+  } else if (state === "FLY" && bet) {
+    balance += mult;
+    bet = false;
+    balanceEl.textContent = balance.toFixed(2);
+    btn.textContent = "ЗАБРАНО";
+    btn.className = "gray";
+  }
+};
+
+startWait();
+</script>
+
+</body>
+</html>
