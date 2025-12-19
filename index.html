@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>AlukaCase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <button class="icon">✕</button>
+    <div class="online">👤 109</div>
+    <div class="balance">💎 0.00 <span class="plus">+</span></div>
+    <button class="icon">⚙️</button>
+  </div>
+
+  <!-- SCREENS -->
+  <div class="screen active" id="crash">
+    <div class="orbit"></div>
+
+    <div class="status">Ожидание</div>
+
+    <div class="coeffs">
+      <span>1.46</span><span>2.21</span><span>7.68</span>
+    </div>
+
+    <button class="main-btn">Сделать ставку</button>
+
+    <div class="players">
+      <div class="player">Rest · 1.50 → <span class="green">2.04</span></div>
+      <div class="player">I · 1.00 → <span class="red">1.46</span></div>
+    </div>
+  </div>
+
+  <div class="screen" id="cases">
+    <div class="stub">
+      Привет 👋<br>Раздел на техработах
+    </div>
+  </div>
+
+  <div class="screen" id="profile">
+    <div class="profile">
+      <div class="avatar"></div>
+      <div class="name">Username · 1 lvl</div>
+
+      <div class="progress">
+        <div class="bar"></div>
+      </div>
+
+      <div class="actions">
+        <button class="blue">Пополнить</button>
+        <button class="dark">Награды</button>
+      </div>
+
+      <h3>🎒 Inventory (0)</h3>
+      <div class="inventory">Тут пусто :(</div>
+
+      <h3>🤝 Referral</h3>
+      <div class="ref">В тех работах</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="nav">
+    <button onclick="show('cases')">🧰<br>Case</button>
+    <button class="active" onclick="show('crash')">🚀<br>Crash</button>
+    <button onclick="show('profile')">👤<br>Profile</button>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
