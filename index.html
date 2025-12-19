@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlukaCase</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #0b1a33, #040814);
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .screen {
+      display: none;
+      padding: 20px;
+      padding-bottom: 90px;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* HEADER */
+    .top {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .balance {
+      background: #111b30;
+      padding: 8px 12px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .balance button {
+      background: #1e90ff;
+      border: none;
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    /* PROFILE */
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #222;
+    }
+
+    .block-title {
+      opacity: 0.6;
+      margin-bottom: 6px;
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    .block {
+      background: #0f1b33;
+      padding: 14px;
+      border-radius: 14px;
+      opacity: 0.8;
+    }
+
+    /* CENTER PLACEHOLDER */
+    .center {
+      text-align: center;
+      margin-top: 80px;
+      opacity: 0.6;
+    }
+
+    /* BOTTOM NAV */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0b1528;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-top: 1px solid #142347;
+    }
+
+    .nav button {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 14px;
+    }
+
+    .nav button.active {
+      color: #1e90ff;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- PROFILE -->
+  <div id="profile" class="screen active">
+    <div class="top">
+      <div class="balance">
+        TON 0.00
+        <button id="plus">+</button>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="avatar"></div>
+      <div id="username">@username</div>
+    </div>
+
+    <div class="block-title">Инвентарь</div>
+    <div class="block">Тут пусто :(</div>
+
+    <div class="block-title">Реферальная система</div>
+    <div class="block">В тех работах</div>
+  </div>
+
+  <!-- CRASH -->
+  <div id="crash" class="screen">
+    <div class="center">
+      <h2>🚀 Crash</h2>
+      <p>В тех работах</p>
+    </div>
+  </div>
+
+  <!-- CASES -->
+  <div id="cases" class="screen">
+    <div class="center">
+      <h2>🎁 Кейсы</h2>
+      <p>В тех работах</p>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button data-screen="cases">🎁 Кейсы</button>
+    <button data-screen="crash">🚀 Crash</button>
+    <button data-screen="profile" class="active">👤 Профиль</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.ready();
+
+    const screens = document.querySelectorAll('.screen');
+    const buttons = document.querySelectorAll('.nav button');
+
+    function showScreen(id) {
+      screens.forEach(s => s.classList.remove('active'));
+      buttons.forEach(b => b.classList.remove('active'));
+
+      document.getElementById(id).classList.add('active');
+      document.querySelector(`[data-screen="${id}"]`).classList.add('active');
+    }
+
+    buttons.forEach(btn => {
+      btn.onclick = () => showScreen(btn.dataset.screen);
+    });
+
+    document.getElementById('plus').onclick = () => {
+      tg ? tg.showAlert('Пополнение временно недоступно')
+         : alert('Пополнение временно недоступно');
+    };
+
+    if (tg?.initDataUnsafe?.user) {
+      const u = tg.initDataUnsafe.user;
+      document.getElementById('username').innerText =
+        u.username ? '@' + u.username : u.first_name;
+    }
+  </script>
+
+</body>
+</html>
