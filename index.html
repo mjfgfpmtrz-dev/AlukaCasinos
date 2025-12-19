@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlukaCase</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- PROFILE SCREEN -->
+  <div class="screen" id="screen-profile">
+    <div class="header">
+      <div class="balance">
+        <span class="ton">TON 0.00</span>
+        <button class="plus">+</button>
+      </div>
+    </div>
+
+    <div class="profile">
+      <img id="avatar" class="avatar" />
+      <div class="username" id="username">@username</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Инвентарь</div>
+      <div class="inventory">Тут пусто :(</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Реферальная система</div>
+      <div class="ref">В тех работах</div>
+    </div>
+  </div>
+
+  <!-- CRASH SCREEN -->
+  <div class="screen hidden" id="screen-crash">
+    <div class="center">
+      <h2>🚀 Crash</h2>
+      <p>В тех работах</p>
+    </div>
+  </div>
+
+  <!-- CASES SCREEN -->
+  <div class="screen hidden" id="screen-cases">
+    <div class="center">
+      <h2>🎁 Кейсы</h2>
+      <p>В тех работах</p>
+    </div>
+  </div>
+
+</div>
+
+  <!-- PROFILE -->
+  <div class="profile">
+    <img id="avatar" class="avatar" src="" />
+    <div class="username" id="username">@username</div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="block">
+    <div class="block-title">Инвентарь</div>
+    <div class="inventory empty">
+      Тут пусто :(
+    </div>
+  </div>
+
+  <!-- REF -->
+  <div class="block">
+    <div class="block-title">Реферальная система</div>
+    <div class="ref">
+      В тех работах
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item">🎁 Кейсы</div>
+  <div class="nav-item active">🚀 Crash</div>
+  <div class="nav-item">👤 Профиль</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
