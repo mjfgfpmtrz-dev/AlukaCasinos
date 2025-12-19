@@ -1,0 +1,113 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(180deg, #1e4fd8 0%, #132c7a 100%);
+  color: #fff;
+}
+
+/* TOP */
+.top {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.top-card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+/* LIVE */
+.live-strip {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  overflow-x: auto;
+}
+
+.live-item {
+  min-width: 52px;
+  height: 52px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+/* CENTER */
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.case-altar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top, #8fa8ff, #3b4fd8);
+  box-shadow: 0 0 40px rgba(130,160,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 46px;
+}
+
+.balance {
+  margin-top: 10px;
+  opacity: 0.9;
+}
+
+/* PRICES */
+.prices {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.price-card {
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(180deg, #6c3cff, #4b1fd1);
+  border-radius: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* BOTTOM */
+.bottom {
+  margin-top: 30px;
+  padding: 16px;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  background: #ffffff;
+  border: none;
+  border-radius: 18px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.timer {
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 16px;
+  text-align: center;
+}
