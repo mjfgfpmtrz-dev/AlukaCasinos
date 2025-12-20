@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crash Step 2 Fixed</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system}
+body{
+  background:linear-gradient(#0b1020,#0e1430);
+  color:white;
+  height:100vh;
+  overflow:hidden;
+}
+.mult{
+  position:absolute;
+  top:80px;
+  width:100%;
+  text-align:center;
+  font-size:54px;
+  font-weight:700;
+}
+.mult.crash{color:#ff5555}
+.timer{
+  position:absolute;
+  top:145px;
+  width:100%;
+  text-align:center;
+  opacity:.6;
+}
+canvas{
+  position:absolute;
+  top:190px;
+  width:100%;
+  height:55%;
+}
+button{
+  position:absolute;
+  bottom:60px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:16px 36px;
+  font-size:16px;
+  border:none;
+  border-radius:14px;
+  background:#1e90ff;
+  color:white;
+}
+button.gray{background:#2a2f45}
+</style>
+</head>
+
+<body>
+
+<div class="mult" id="mult">x1.00</div>
+<div class="timer" id="timer">Ожидание: 5</div>
+<canvas id="cv"></canvas>
+<button id="btn">СДЕЛАТЬ СТАВКУ</button>
+
+<script>
+let state='WAIT';
+let bet=false;
+let timer=5;
+let startTime=0;
+let crashPoint=0;
+let raf;
+
+const multEl=document.getElementById('mult');
+const timerEl=document.getElementById('timer');
+const btn=document.getElementById('btn');
+
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+cv.width=innerWidth;
+cv.height=innerHeight*0.55;
+
+let points=[];
+
+/* 🎯 КРАШ ТОЧКА (ЭКОНОМИКА) */
+function getCrash(){
+  const r=Math.random();
+  if(r<0.35) return 1.0 + Math.random()*0.2;   // часто лоу
+  if(r<0.70) return 1.2 + Math.random()*0.5;
+  if(r<0.90) return 1.7 + Math.random()*0.8;
+  return 3 + Math.random()*3;
+}
+
+/* WAIT */
+function wait(){
+  state='WAIT';
+  bet=false;
+  timer=5;
+  points=[];
+  multEl.textContent='x1.00';
+  multEl.classList.remove('crash');
+  btn.textContent='СДЕЛАТЬ СТАВКУ';
+  btn.className='';
+  timerEl.textContent='Ожидание: '+timer;
+
+  const t=setInterval(()=>{
+    timer--;
+    timerEl.textContent='Ожидание: '+timer;
+    if(timer<=0){
+      clearInterval(t);
+      start();
+    }
+  },1000);
+}
+
+/* START */
+function start(){
+  state='FLY';
+  startTime=performance.now();
+  crashPoint=getCrash();
+  timerEl.textContent='Раунд идёт';
+  btn.textContent=bet?'ЗАБРАТЬ':'—';
+  btn.className=bet?'':'gray';
+  fly();
+}
+
+/* 🧠 МУЛЬТИПЛИКАТОР */
+function calcMultiplier(ms){
+  const t=ms/1000;
+
+  if(t<2.5) return 1 + t*0.08;               // медленно до ~1.2
+  if(t<5) return 1.2 + (t-2.5)*0.18;         // плавно
+  return 1.65 + (t-5)*0.35;                  // разгон
+}
+
+/* FLY */
+function fly(){
+  if(state!=='FLY') return;
+
+  const elapsed=performance.now()-startTime;
+  const mult=calcMultiplier(elapsed);
+
+  multEl.textContent='x'+mult.toFixed(2);
+
+  points.push(mult);
+  draw();
+
+  if(mult>=crashPoint){
+    crash(mult);
+    return;
+  }
+  raf=requestAnimationFrame(fly);
+}
+
+/* 🎨 ГРАФИК */
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+
+  // сетка
+  ctx.strokeStyle='rgba(255,255,255,0.07)';
+  for(let i=0;i<10;i++){
+    ctx.beginPath();
+    ctx.moveTo(0,i*cv.height/10);
+    ctx.lineTo(cv.width,i*cv.height/10);
+    ctx.stroke();
+  }
+
+  // линия
+  ctx.beginPath();
+  ctx.strokeStyle='#4fc3ff';
+  ctx.lineWidth=2;
+  ctx.shadowColor='#4fc3ff';
+  ctx.shadowBlur=10;
+
+  points.forEach((m,i)=>{
+    const x=i*6;
+    const y=cv.height - m*90;
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+}
+
+/* CRASH */
+function crash(m){
+  state='CRASH';
+  multEl.classList.add('crash');
+  timerEl.textContent='CRASH x'+m.toFixed(2);
+  btn.textContent='—';
+  btn.className='gray';
+  setTimeout(wait,2000);
+}
+
+/* BUTTON */
+btn.onclick=()=>{
+  if(state==='WAIT'){
+    bet=!bet;
+    btn.textContent=bet?'ОТМЕНИТЬ':'СДЕЛАТЬ СТАВКУ';
+    btn.className=bet?'gray':'';
+  }
+  else if(state==='FLY' && bet){
+    bet=false;
+    btn.textContent='—';
+    btn.className='gray';
+    timerEl.textContent='Забрал на '+multEl.textContent;
+  }
+};
+
+wait();
+</script>
+</body>
+</html>
