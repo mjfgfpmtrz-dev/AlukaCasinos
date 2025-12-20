@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlukaCase — Crash</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
+body{
+  background:radial-gradient(circle at top,#0b1a33,#040814);
+  color:#fff;
+  overflow:hidden;
+}
+
+/* TOP */
+.top{
+  display:flex;
+  justify-content:flex-end;
+  padding:14px;
+}
+.balance{
+  background:#0f1b33;
+  padding:8px 14px;
+  border-radius:14px;
+  font-weight:600;
+}
+
+/* CRASH */
+.crash-area{
+  position:relative;
+  height:70vh;
+  overflow:hidden;
+}
+.multiplier{
+  position:absolute;
+  top:32%;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:38px;
+  font-weight:700;
+  text-shadow:0 0 16px rgba(0,170,255,.8);
+}
+.multiplier.crash{
+  color:#ff3b3b;
+}
+
+/* ROCKET */
+.rocket{
+  position:absolute;
+  width:54px;
+  height:54px;
+  filter:drop-shadow(0 0 12px #6fd3ff);
+  z-index:2;
+}
+.rocket svg{width:100%;height:100%;}
+
+/* BETS */
+.bets{
+  position:absolute;
+  top:16px;
+  left:14px;
+  font-size:13px;
+  opacity:.85;
+}
+.bet-item{margin-bottom:4px}
+.bet-name{color:#6fd3ff}
+.bet-amount{color:#aaa}
+
+/* CONTROLS */
+.controls{
+  position:absolute;
+  bottom:90px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  z-index:10;
+}
+.controls button{
+  padding:14px 20px;
+  border-radius:14px;
+  border:none;
+  font-size:16px;
+  color:white;
+}
+.controls .blue{background:#1e90ff}
+.controls .gray{background:#2a2f45}
+
+/* TIMER */
+.timer{
+  text-align:center;
+  opacity:.6;
+  margin-top:8px;
+}
+
+/* NAV */
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#0b1528;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  border-top:1px solid #142347;
+  z-index:10;
+}
+.nav button{
+  background:none;
+  border:none;
+  color:#888;
+}
+.nav .active{color:#1e90ff;font-weight:600}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+  <div class="balance">TON <span id="balance">100.00</span></div>
+</div>
+
+<div class="crash-area">
+
+  <div class="bets" id="bets"></div>
+
+  <div class="multiplier" id="multiplier">x1.00</div>
+
+  <div class="rocket" id="rocket">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 2C9 6 9 14 12 22C15 14 15 6 12 2Z"
+      fill="url(#g)"/>
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6fd3ff"/>
+          <stop offset="100%" stop-color="#4f5dff"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button class="blue" id="betBtn">СТАВКА 1 TON</button>
+    <button class="gray" id="cancelBtn">ОТМЕНА</button>
+    <button class="gray" id="cashoutBtn">ЗАБРАТЬ</button>
+  </div>
+
+  <div class="timer" id="timer">Следующий раунд через 5</div>
+</div>
+
+<div class="nav">
+  <button>🎁 Кейсы</button>
+  <button class="active">🚀 Crash</button>
+  <button>👤 Профиль</button>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if(tg) tg.ready();
+
+let balance=100, bet=false, flying=false;
+let mult=1, crashPoint=0;
+let x=20, y=40;
+let timer=5;
+let raf;
+
+const names=['Alex','Maks','Den','Leo','Artem','Niko','Roma','Tim','Ilya'];
+
+function renderBets(){
+  bets.innerHTML='';
+  for(let i=0;i<3+Math.random()*3;i++){
+    bets.innerHTML+=`
+    <div class="bet-item">
+      <span class="bet-name">${names[Math.floor(Math.random()*names.length)]}</span>
+      <span class="bet-amount"> — ${(Math.random()*3+0.5).toFixed(2)} TON</span>
+    </div>`;
+  }
+}
+
+function crashRandom(){
+  const r=Math.random();
+  if(r<0.7)return 1.3+Math.random()*1.2;
+  if(r<0.9)return 2.5+Math.random()*1.5;
+  return 4+Math.random()*4;
+}
+
+function startTimer(){
+  renderBets();
+  timer=5;
+  timerEl.innerText=`Следующий раунд через ${timer}`;
+  const t=setInterval(()=>{
+    timer--;
+    timerEl.innerText=`Следующий раунд через ${timer}`;
+    if(timer<=0){
+      clearInterval(t);
+      startRound();
+    }
+  },1000);
+}
+
+function startRound(){
+  flying=true;
+  mult=1;
+  crashPoint=crashRandom();
+  x=20; y=40;
+  animate();
+}
+
+function animate(){
+  if(!flying)return;
+  mult+=0.008+mult*0.0015;
+  multiplier.innerText='x'+mult.toFixed(2);
+
+  x+=1.3; y+=1.1;
+  if(y>window.innerHeight*0.42)y=window.innerHeight*0.42;
+
+  rocket.style.left=x+'px';
+  rocket.style.bottom=y+'px';
+
+  if(mult>=crashPoint){crash();return;}
+  raf=requestAnimationFrame(animate);
+}
+
+function crash(){
+  flying=false;
+  multiplier.classList.add('crash');
+  setTimeout(()=>multiplier.classList.remove('crash'),800);
+  startTimer();
+}
+
+betBtn.onclick=()=>{
+  if(flying||bet||balance<1)return;
+  bet=true; balance-=1;
+  balanceEl.innerText=balance.toFixed(2);
+};
+
+cancelBtn.onclick=()=>{
+  if(flying||!bet)return;
+  bet=false; balance+=1;
+  balanceEl.innerText=balance.toFixed(2);
+};
+
+cashoutBtn.onclick=()=>{
+  if(!flying||!bet)return;
+  bet=false;
+  balance+=mult;
+  balanceEl.innerText=balance.toFixed(2);
+};
+
+startTimer();
+</script>
+
+</body>
+</html>
