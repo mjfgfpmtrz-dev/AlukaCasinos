@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Crash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+*{box-sizing:border-box;font-family:Inter,system-ui}
+body{margin:0;background:#0b0f14;color:#fff;overflow:hidden}
+#game{position:relative;width:100vw;height:100vh}
+
+/* центр */
+#centerText{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:72px;font-weight:800;opacity:.9;pointer-events:none
+}
+
+/* множитель */
+#mult{
+  position:absolute;top:16px;left:50%;
+  transform:translateX(-50%);
+  font-size:28px;font-weight:700
+}
+
+/* canvas */
+canvas{position:absolute;inset:0}
+
+/* кнопка */
+#betBtn{
+  position:absolute;bottom:120px;left:50%;
+  transform:translateX(-50%);
+  width:90%;max-width:420px;
+  background:#1677ff;border:none;
+  color:#fff;font-size:18px;
+  padding:16px;border-radius:14px
+}
+
+/* список ставок */
+#bets{
+  position:absolute;bottom:0;left:0;right:0;
+  background:#121722;padding:10px 14px;
+}
+.bet{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid #1e2533
+}
+.bet:last-child{border:none}
+.betL{display:flex;gap:10px;align-items:center}
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:#2a3142
+}
+.name{font-size:14px}
+.small{font-size:12px;opacity:.7}
+</style>
+</head>
+<body>
+
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div id="mult">x1.00</div>
+  <div id="centerText"></div>
+
+  <button id="betBtn">Сделать ставку</button>
+
+  <div id="bets">
+    <div class="bet">
+      <div class="betL">
+        <div class="avatar"></div>
+        <div>
+          <div class="name">Ты</div>
+          <div class="small">44 TON · x1.00</div>
+        </div>
+      </div>
+      <div>44.00</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== НАСТРОЙКИ ===== */
+const WAIT_TIME = 5;
+const MAX_X = 10;
+const AVG_TARGET = 2.0; // средний краш ~1.6–1.8
+let state = "WAIT";
+let wait = WAIT_TIME;
+let t = 0;
+let mult = 1;
+let crashAt = 2;
+
+/* canvas */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+function resize(){
+  cv.width = innerWidth;
+  cv.height = innerHeight;
+}
+resize(); onresize = resize;
+
+/* UI */
+const centerText = document.getElementById('centerText');
+const multEl = document.getElementById('mult');
+
+/* ракета */
+const rocket = {x:0,y:0};
+
+/* кривая роста (медленно в начале) */
+function curve(x){
+  return Math.pow(x,1.6);
+}
+
+/* генерация краша */
+function genCrash(){
+  let r = Math.random();
+  let base = AVG_TARGET + r*1.2;
+  if(Math.random()<0.08) base+=2;
+  return Math.min(base,MAX_X);
+}
+
+/* старт ожидания */
+function startWait(){
+  state="WAIT";
+  wait=WAIT_TIME;
+  centerText.textContent=wait;
+}
+
+/* старт раунда */
+function startFly(){
+  state="FLY";
+  t=0; mult=1;
+  crashAt = genCrash();
+}
+
+/* взрыв */
+function explode(){
+  state="CRASH";
+  centerText.textContent="💥";
+  setTimeout(startWait,1200);
+}
+
+/* draw */
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+
+  /* график */
+  ctx.strokeStyle="#2f7cff";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  for(let i=0;i<=t;i+=0.01){
+    let x=i*cv.width*0.6;
+    let y=cv.height - curve(i)*200;
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  /* ракета */
+  let rx = t*cv.width*0.6;
+  let ry = cv.height - curve(t)*200;
+  ctx.fillStyle="#fff";
+  ctx.beginPath();
+  ctx.arc(rx,ry,14,0,Math.PI*2);
+  ctx.fill();
+}
+
+/* loop */
+function loop(){
+  if(state==="WAIT"){
+    centerText.textContent = wait;
+  }
+  if(state==="FLY"){
+    t+=0.008;
+    mult = 1 + t*1.4;
+    multEl.textContent = "x"+mult.toFixed(2);
+    draw();
+    if(mult>=crashAt) explode();
+  }
+  requestAnimationFrame(loop);
+}
+
+/* таймер ожидания */
+setInterval(()=>{
+  if(state==="WAIT"){
+    wait--;
+    if(wait<=0){
+      centerText.textContent="";
+      startFly();
+    }
+  }
+},1000);
+
+startWait();
+loop();
+</script>
+</body>
+</html>
