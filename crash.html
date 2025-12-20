@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crash</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+}
+
+#top{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+}
+
+#mult{
+  text-align:center;
+  font-size:42px;
+  font-weight:800;
+  margin-top:10px;
+}
+
+#canvasWrap{
+  position:relative;
+  height:45vh;
+}
+
+canvas{
+  width:100%;
+  height:100%;
+}
+
+#rocket{
+  position:absolute;
+  width:60px;
+  transform-origin:center;
+}
+
+#lastX{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+  margin:10px 0;
+}
+.last{
+  padding:6px 10px;
+  border-radius:8px;
+  background:#1b2438;
+  font-weight:600;
+}
+
+#betBtn{
+  margin:10px 16px;
+  height:54px;
+  border-radius:14px;
+  border:none;
+  background:#1e90ff;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+}
+
+#bets{
+  background:#111;
+  padding:10px;
+}
+.bet{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid #222;
+}
+.bet img{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  margin-right:10px;
+}
+.bet-left{
+  display:flex;
+  align-items:center;
+}
+.bet-name{
+  font-weight:600;
+}
+.bet-sub{
+  font-size:12px;
+  opacity:.6;
+}
+.bet-right{
+  font-weight:700;
+}
+.bet-right.crash{
+  color:#ff3b3b;
+}
+</style>
+</head>
+
+<body>
+
+<div id="top">
+  <div>👥 106</div>
+  <div>TON 100.00</div>
+</div>
+
+<div id="mult">x1.00</div>
+
+<div id="canvasWrap">
+  <canvas id="cv"></canvas>
+  <img id="rocket" src="https://i.imgur.com/2nCt3Sbl.png">
+</div>
+
+<div id="lastX"></div>
+
+<button id="betBtn">СДЕЛАТЬ СТАВКУ</button>
+
+<div id="bets"></div>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+cv.width = cv.offsetWidth;
+cv.height = cv.offsetHeight;
+
+let mult = 1;
+let crash = 0;
+let flying = false;
+let t = 0;
+let last = [];
+
+const multEl = document.getElementById('mult');
+const rocket = document.getElementById('rocket');
+const betsEl = document.getElementById('bets');
+
+function getCrash(){
+  const r=Math.random();
+  if(r<0.18) return 1.0+Math.random()*0.08;
+  if(r<0.38) return 1.08+Math.random()*0.22;
+  if(r<0.63) return 1.3+Math.random()*0.4;
+  if(r<0.83) return 1.7+Math.random()*0.6;
+  if(r<0.96) return 2.3+Math.random()*1.7;
+  return 4+Math.random()*3;
+}
+
+function start(){
+  mult=1; t=0;
+  crash=getCrash();
+  flying=true;
+  loop();
+}
+
+function loop(){
+  if(!flying) return;
+
+  mult += mult<1.4 ? 0.002 : 0.006 + mult*0.002;
+  multEl.innerText='x'+mult.toFixed(2);
+
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#3aff6f';
+  ctx.lineWidth=6;
+  ctx.shadowBlur=15;
+  ctx.shadowColor='#3aff6f';
+
+  ctx.beginPath();
+  ctx.moveTo(0,cv.height);
+  ctx.lineTo(t,cv.height - (mult-1)*140);
+  ctx.stroke();
+
+  rocket.style.left = t+'px';
+  rocket.style.top = (cv.height - (mult-1)*140 - 30)+'px';
+  rocket.style.transform='rotate(20deg)';
+
+  t+=3;
+
+  if(mult>=crash){
+    flying=false;
+    ctx.strokeStyle='#ff3b3b';
+    last.unshift('x'+crash.toFixed(2));
+    if(last.length>6) last.pop();
+    renderLast();
+    crashBets();
+    setTimeout(start,2000);
+    return;
+  }
+
+  requestAnimationFrame(loop);
+}
+
+function renderLast(){
+  const el=document.getElementById('lastX');
+  el.innerHTML='';
+  last.forEach(x=>{
+    const d=document.createElement('div');
+    d.className='last';
+    d.innerText=x;
+    el.appendChild(d);
+  });
+}
+
+function renderBets(){
+  betsEl.innerHTML='';
+  for(let i=0;i<5;i++){
+    const b=document.createElement('div');
+    b.className='bet';
+    b.innerHTML=`
+      <div class="bet-left">
+        <img src="https://i.imgur.com/6VBx3io.png">
+        <div>
+          <div class="bet-name">Игрок ${i+1}</div>
+          <div class="bet-sub">10.00 x1.00</div>
+        </div>
+      </div>
+      <div class="bet-right">${(10*mult).toFixed(2)}</div>
+    `;
+    betsEl.appendChild(b);
+  }
+}
+
+function crashBets(){
+  document.querySelectorAll('.bet-right')
+    .forEach(e=>e.classList.add('crash'));
+}
+
+renderBets();
+renderLast();
+start();
+</script>
+
+</body>
+</html>
