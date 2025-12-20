@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crash — Core</title>
+
+<style>
+body{
+  background:#0b1020;
+  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,Segoe UI;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+}
+.mult{
+  font-size:48px;
+  margin-bottom:20px;
+}
+.timer{
+  opacity:.6;
+  margin-bottom:30px;
+}
+button{
+  padding:14px 24px;
+  font-size:16px;
+  border:none;
+  border-radius:12px;
+  background:#1e90ff;
+  color:white;
+}
+.gray{background:#2a2f45}
+</style>
+</head>
+
+<body>
+
+<div class="mult" id="mult">x1.00</div>
+<div class="timer" id="timer">Ожидание: 5</div>
+
+<button id="mainBtn">СДЕЛАТЬ СТАВКУ</button>
+
+<script>
+/*
+  STATES:
+  WAITING  – идёт таймер, можно ставить / отменять
+  FLYING  – рост X, можно забрать
+  CRASH   – раунд закончился
+*/
+
+let state = 'WAITING';
+let bet = false;
+let timer = 5;
+let mult = 1;
+let crashPoint = 0;
+let interval = null;
+
+const multEl = document.getElementById('mult');
+const timerEl = document.getElementById('timer');
+const btn = document.getElementById('mainBtn');
+
+function getCrashPoint(){
+  const r = Math.random();
+  if(r < 0.65) return 1.3 + Math.random()*1.2;
+  if(r < 0.85) return 2.5 + Math.random()*1.5;
+  if(r < 0.95) return 4 + Math.random()*2;
+  return 6 + Math.random()*4;
+}
+
+/* WAITING */
+function startWaiting(){
+  state = 'WAITING';
+  bet = false;
+  timer = 5;
+  mult = 1;
+  multEl.textContent = 'x1.00';
+  btn.textContent = 'СДЕЛАТЬ СТАВКУ';
+  btn.className = '';
+
+  timerEl.textContent = 'Ожидание: ' + timer;
+
+  interval = setInterval(()=>{
+    timer--;
+    timerEl.textContent = 'Ожидание: ' + timer;
+    if(timer <= 0){
+      clearInterval(interval);
+      startRound();
+    }
+  },1000);
+}
+
+/* ROUND */
+function startRound(){
+  state = 'FLYING';
+  crashPoint = getCrashPoint();
+  timerEl.textContent = 'Раунд идёт';
+  if(bet){
+    btn.textContent = 'ЗАБРАТЬ';
+    btn.className = '';
+  }else{
+    btn.textContent = '—';
+    btn.className = 'gray';
+  }
+  fly();
+}
+
+function fly(){
+  if(state !== 'FLYING') return;
+
+  mult += mult < 1.3 ? 0.003 : mult < 2 ? 0.006 : 0.012;
+  multEl.textContent = 'x' + mult.toFixed(2);
+
+  if(mult >= crashPoint){
+    crash();
+    return;
+  }
+  requestAnimationFrame(fly);
+}
+
+function crash(){
+  state = 'CRASH';
+  timerEl.textContent = 'CRASH на x' + mult.toFixed(2);
+  btn.textContent = '—';
+  btn.className = 'gray';
+  setTimeout(startWaiting, 2000);
+}
+
+/* BUTTON */
+btn.onclick = ()=>{
+  if(state === 'WAITING'){
+    if(!bet){
+      bet = true;
+      btn.textContent = 'ОТМЕНИТЬ';
+      btn.className = 'gray';
+    }else{
+      bet = false;
+      btn.textContent = 'СДЕЛАТЬ СТАВКУ';
+      btn.className = '';
+    }
+  }
+  else if(state === 'FLYING' && bet){
+    bet = false;
+    btn.textContent = '—';
+    btn.className = 'gray';
+    timerEl.textContent = 'Забрал на x' + mult.toFixed(2);
+  }
+};
+
+startWaiting();
+</script>
+
+</body>
+</html>
