@@ -1,133 +1,315 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Crash</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AlukaCase — Crash</title>
+
 <style>
-html,body{margin:0;background:#0b0f1a;color:#fff;font-family:Inter,Arial}
-#app{position:relative;width:100vw;height:100vh}
-canvas{position:absolute;inset:0}
-#mult{position:absolute;top:90px;width:100%;text-align:center;font-size:48px;font-weight:700}
-#btn{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
-width:88%;height:56px;border:none;border-radius:14px;background:#2b7cff;
-color:#fff;font-size:18px;font-weight:600}
-#balance{position:absolute;top:20px;left:20px;font-size:14px;opacity:.8}
-#history{position:absolute;bottom:0;width:100%;background:#0f1424;padding:10px}
-.hist{font-size:13px;opacity:.8}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto}
+body{
+  background:radial-gradient(circle at top,#0b1a33,#040814);
+  color:#fff;
+  overflow:hidden;
+}
+
+/* TOP */
+.top{
+  padding:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.balance{
+  background:#0f1b33;
+  padding:8px 12px;
+  border-radius:14px;
+  font-weight:600;
+}
+.history{
+  display:flex;
+  gap:6px;
+}
+.history div{
+  padding:4px 8px;
+  border-radius:10px;
+  font-size:13px;
+  background:#1b2444;
+}
+.history .low{color:#ff5b5b}
+.history .mid{color:#ffd24f}
+.history .high{color:#4cff9a}
+
+/* CRASH AREA */
+.crash-area{
+  position:relative;
+  width:100%;
+  height:70vh;
+}
+
+/* CANVAS */
+canvas{
+  position:absolute;
+  inset:0;
+}
+
+/* COUNTDOWN */
+.countdown{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:64px;
+  font-weight:700;
+  opacity:0;
+  transition:opacity .3s;
+}
+
+/* MULTIPLIER */
+.multiplier{
+  position:absolute;
+  top:28%;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:36px;
+  font-weight:700;
+  text-shadow:0 0 15px rgba(0,170,255,.8);
+  display:none;
+}
+.multiplier.crash{
+  color:#ff3b3b;
+}
+
+/* ROCKET */
+.rocket{
+  position:absolute;
+  width:48px;
+  height:48px;
+  filter:drop-shadow(0 0 12px #4fc3ff);
+}
+.rocket svg{width:100%;height:100%}
+
+/* CONTROLS */
+.controls{
+  position:absolute;
+  bottom:90px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.controls button{
+  background:#1e90ff;
+  border:none;
+  color:white;
+  padding:16px 28px;
+  border-radius:18px;
+  font-size:18px;
+  font-weight:600;
+}
+
+/* BOTTOM NAV */
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#0b1528;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  border-top:1px solid #142347;
+}
+.nav button{
+  background:none;
+  border:none;
+  color:#888;
+}
+.nav button.active{
+  color:#1e90ff;
+  font-weight:600;
+}
 </style>
 </head>
+
 <body>
 
-<div id="app">
-<canvas id="cv"></canvas>
-<div id="balance">Баланс: <span id="bal">10.00</span> TON</div>
-<div id="mult">x1.00</div>
-<button id="btn">Сделать ставку</button>
-<div id="history"></div>
+<div class="top">
+  <div class="balance">TON 100.00</div>
+  <div class="history" id="history"></div>
+</div>
+
+<div class="crash-area">
+  <canvas id="chart"></canvas>
+
+  <div class="countdown" id="countdown">5</div>
+  <div class="multiplier" id="multiplier">x1.00</div>
+
+  <div class="rocket" id="rocket">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M12 2C9 6 9 14 12 22C15 14 15 6 12 2Z" fill="url(#g)"/>
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6fd3ff"/>
+          <stop offset="100%" stop-color="#4f5dff"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button id="betBtn">Сделать ставку</button>
+  </div>
+</div>
+
+<div class="nav">
+  <button>🎁 Кейсы</button>
+  <button class="active">🚀 Crash</button>
+  <button>👤 Профиль</button>
 </div>
 
 <script>
-/* ===== CANVAS ===== */
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-cv.width = innerWidth;
-cv.height = innerHeight;
-
 /* ===== STATE ===== */
 let state = 'WAIT';
-let startTime = 0;
-let elapsed = 0;
-let mult = 1;
-let crashX = 1;
-let balance = 10;
-let bet = null;
+let countdown = 5;
+let multiplier = 1;
+let crashPoint = 1;
 let history = [];
 
-/* ===== LOGIC ===== */
+/* ===== ELEMENTS ===== */
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+const cdEl = document.getElementById('countdown');
+const multEl = document.getElementById('multiplier');
+const rocket = document.getElementById('rocket');
+const histEl = document.getElementById('history');
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = canvas.parentElement.offsetHeight;
+}
+resize(); window.onresize = resize;
+
+/* ===== CRASH RNG (хозяин всегда в плюсе) ===== */
 function genCrash(){
-  const r=Math.random();
-  if(r<0.4) return 1+Math.random()*0.2;
-  if(r<0.8) return 1.3+Math.random()*2;
-  return 3+Math.random()*6;
+  const r = Math.random();
+  if(r < 0.45) return 1 + Math.random()*0.15;     // 1.00–1.15 часто
+  if(r < 0.75) return 1.15 + Math.random()*0.8;   // 1.2–2.0
+  if(r < 0.93) return 2 + Math.random()*2;        // 2–4
+  return 4 + Math.random()*5;                     // редко
 }
 
-function startRound(){
-  crashX = genCrash();
-  startTime = performance.now();
-  state='FLY';
-  bet=null;
-}
-
-function endRound(){
-  history.unshift(crashX.toFixed(2));
-  history = history.slice(0,6);
-  setTimeout(startRound,2000);
-}
-
-function update(){
-  if(state!=='FLY') return;
-
-  elapsed = (performance.now()-startTime)/1000;
-  mult = Math.exp(elapsed*0.6);
-
-  if(mult>=crashX){
-    state='CRASH';
-    mult=crashX;
-    if(bet) bet=null;
-    endRound();
-  }
+/* ===== HISTORY ===== */
+function addHistory(x){
+  history.unshift(x.toFixed(2));
+  if(history.length>7) history.pop();
+  histEl.innerHTML='';
+  history.forEach(v=>{
+    const d=document.createElement('div');
+    d.textContent='x'+v;
+    if(v<1.2)d.className='low';
+    else if(v<2)d.className='mid';
+    else d.className='high';
+    histEl.appendChild(d);
+  });
 }
 
 /* ===== DRAW ===== */
+let points=[];
 function draw(){
-  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // GRID
-  ctx.strokeStyle='#1e2533';
-  for(let x=0;x<cv.width;x+=60){
-    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.05)';
+  for(let x=0;x<canvas.width;x+=40){
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();
   }
-  for(let y=0;y<cv.height;y+=60){
-    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();
-  }
-
-  // CURVE
-  ctx.beginPath();
-  for(let t=0;t<elapsed;t+=0.02){
-    const x=100+t*120;
-    const y=cv.height-100-Math.exp(t*0.6)*60;
-    t===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  for(let y=0;y<canvas.height;y+=40){
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();
   }
 
-  ctx.strokeStyle=state==='CRASH'?'#ff5252':'#4caf50';
-  ctx.lineWidth=4;
-  ctx.stroke();
-
-  document.getElementById('mult').innerText=`x${mult.toFixed(2)}`;
-  document.getElementById('bal').innerText=balance.toFixed(2);
-
-  document.getElementById('history').innerHTML=
-    history.map(x=>`<div class="hist">x${x}</div>`).join('');
-
-  requestAnimationFrame(draw);
+  // curve
+  if(points.length){
+    ctx.strokeStyle='#4fc3ff';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    points.forEach((p,i)=>{
+      const x=i*(canvas.width/120);
+      const y=canvas.height - p;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.stroke();
+  }
 }
 
-/* ===== BET ===== */
-document.getElementById('btn').onclick=()=>{
-  if(state==='WAIT'||state==='CRASH') return;
-  if(!bet){
-    bet={amount:1};
-    balance-=1;
-  }else{
-    balance+=bet.amount*mult;
-    bet=null;
-  }
-};
+/* ===== ROUND FLOW ===== */
+function startCountdown(){
+  state='WAIT';
+  multEl.style.display='none';
+  cdEl.style.opacity=1;
+  cdEl.textContent=countdown;
+  const t=setInterval(()=>{
+    countdown--;
+    cdEl.textContent=countdown;
+    if(countdown<=0){
+      clearInterval(t);
+      cdEl.style.opacity=0;
+      startRound();
+    }
+  },1000);
+}
 
-startRound();
-setInterval(update,16);
-draw();
+function startRound(){
+  state='RUN';
+  multiplier=1;
+  crashPoint=genCrash();
+  points=[];
+  multEl.textContent='x1.00';
+  multEl.classList.remove('crash');
+  multEl.style.display='block';
+
+  let frame=0;
+  function loop(){
+    if(state!=='RUN')return;
+
+    // growth curve
+    if(multiplier<1.4) multiplier+=0.003;
+    else multiplier+=multiplier*0.006;
+
+    multiplier=parseFloat(multiplier.toFixed(2));
+    multEl.textContent='x'+multiplier.toFixed(2);
+
+    const height = multiplier*90;
+    points.push(height);
+
+    rocket.style.left = (20+frame*3)+'px';
+    rocket.style.bottom = (40+height)+'px';
+
+    draw();
+
+    if(multiplier>=crashPoint){
+      crash();
+      return;
+    }
+    frame++;
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function crash(){
+  state='CRASH';
+  multEl.classList.add('crash');
+  addHistory(multiplier);
+  setTimeout(()=>{
+    countdown=5;
+    startCountdown();
+  },1500);
+}
+
+/* START */
+startCountdown();
 </script>
+
 </body>
 </html>
